@@ -1,0 +1,573 @@
+---
+title: "Differential gene transcript abundance using DESeq2"
+output:
+  html_notebook: 
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r include=FALSE}
+library(DESeq2)
+library(tidyverse)
+library(apeglm)
+library(ggpubr)
+library(ggthemes)
+library(EnhancedVolcano)
+library(cowplot)
+library(hablar)
+```
+
+# Data Import
+## Gene Annotation
+Gene specific info from aureowiki: http://aureowiki.med.uni-greifswald.de/Main_Page
+```{r}
+aureowikiGenes <- read_tsv("../docs/GeneSpecificInformation_USA300_FPR3757.tsv")
+aureowikiGenesAbbr <- select(aureowikiGenes, GeneID = "locus tag", pan_gene_symbol = "pan gene symbol", product, contains("TIGR"))
+```
+## RSubread Count Data
+```{r}
+counts <- readRDS("../data/subread/counts.rds")
+```
+## Sample Data
+```{r}
+coldata <- read_tsv("../data/samplesheet.txt") # Sample data
+```
+## Data Tidying
+Make rownames in coldata and colnames in counts match.
+```{r}
+colnames(counts) <- unique(coldata$SampleID)
+counts
+```
+
+# Differential Abundance: Group
+## Run DESeq2 function on dataset using "group" as the design factor. Group specifies the experimental growth conditions for S. aureus.
+Format our data into a DESeqDataSet object using "Group" as the design factor
+```{r}
+# make DESeq2 object
+ddsSE <- DESeqDataSetFromMatrix(
+  countData = counts,
+  colData = coldata,
+  design= ~ Group)
+class(ddsSE)
+```
+Minimal filtering of low counts before any analysis.
+```{r}
+keep <- rowSums(counts(ddsSE)) >= 10
+ddsSE <- ddsSE[keep,]
+```
+Run the DESeq 
+```{r}
+dds <- DESeq(ddsSE, betaPrior = FALSE)
+```
+List the different comparisons based on the :Group" design factor.
+```{r}
+resultsNames(dds)
+```
+
+
+## Results for each condition compared to MMM
+results column meanings (Seen in "sigtab" documents)
+[1] "mean of normalized counts for all samples"             
+[2] "log2 fold change (MLE): condition treated vs untreated"
+[3] "standard error: condition treated vs untreated"        
+[4] "Wald statistic: condition treated vs untreated"        
+[5] "Wald test p-value: condition treated vs untreated"     
+[6] "BH adjusted p-values
+
+```{r}
+res234vsMMMalpha05beta1 <- results(dds, contrast = c("Group","sample_234","control_MMM"), alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res243vsMMMalpha05beta1 <- results(dds, contrast = c("Group","sample_243","control_MMM"), alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res262vsMMMalpha05beta1 <- results(dds, name = "Group_sample_262_vs_control_MMM", alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+resGLUvsMMMalpha05beta1 <- results(dds, name = "Group_control_MMM_GLU_vs_control_MMM", alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+resLACCAAvsMMMalpha05beta1 <- results(dds, name = "Group_control_MMM_LAC_CAA_vs_control_MMM", alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+summary(res234vsMMMalpha05beta1)
+summary(res243vsMMMalpha05beta1)
+summary(res262vsMMMalpha05beta1)
+summary(resGLUvsMMMalpha05beta1)
+summary(resLACCAAvsMMMalpha05beta1)
+```
+### Function: Results to Dataframes
+This function will transform the results tables into a dataframe with added annotation information from the aureowiki database.
+```{r}
+res2table <- function(res = ""){
+  data.frame(res) %>%
+    rownames_to_column("GeneID") %>%
+    left_join(aureowikiGenesAbbr, by = "GeneID")}
+```
+### Apply the res2table function
+```{r}
+# with beta=1, alpha=.001
+df234vsMMMalpha05beta1 <- res2table(res = res234vsMMMalpha05beta1)
+df243vsMMMalpha05beta1 <- res2table(res = res243vsMMMalpha05beta1)
+df262vsMMMalpha05beta1 <- res2table(res = res262vsMMMalpha05beta1)
+dfGLUvsMMMalpha05beta1 <- res2table(res = resGLUvsMMMalpha05beta1)
+dfLACCAAvsMMMalpha05beta1 <- res2table(res = resLACCAAvsMMMalpha05beta1)
+```
+
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .01 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtab234vsMMMalpha05beta1 <- filter(df234vsMMMalpha05beta1, padj < .05)
+sigtab243vsMMMalpha05beta1 <- filter(df243vsMMMalpha05beta1, padj < .05)
+sigtab262vsMMMalpha05beta1 <- filter(df262vsMMMalpha05beta1, padj < .05)
+sigtabGLUvsMMMalpha05beta1 <- filter(dfGLUvsMMMalpha05beta1, padj < .05)
+sigtabLACCAAvsMMMalpha05beta1 <- filter(dfLACCAAvsMMMalpha05beta1, padj < .05)
+```
+Export csv files for significant DEGs
+```{r}
+write_csv(sigtab234vsMMMalpha05beta1, path = "../data/DESeq2/sigtab234vsMMMalpha05beta1.csv")
+write_csv(sigtab243vsMMMalpha05beta1, path = "../data/DESeq2/sigtab243vsMMMalpha05beta1.csv")
+write_csv(sigtab262vsMMMalpha05beta1, path = "../data/DESeq2/sigtab262vsMMMalpha05beta1.csv")
+write_csv(sigtabGLUvsMMMalpha05beta1, path = "../data/DESeq2/sigtabGLUvsMMMalpha05beta1.csv")
+write_csv(sigtabLACCAAvsMMMalpha05beta1, path = "../data/DESeq2/sigtabLACCAAvsMMMalpha05beta1.csv")
+```
+
+### Function: Custom MA Plots
+Plot log2FC on the y axis and log2 mean normalized counts on the x-axis.  
+Color is based on the adjusted p-value
+```{r}
+makeMA <- function(x){
+  p <- ggmaplot(x, 
+                #fc of 2 corresponds to the log2fc of 1 we tested in our hyp. in the results command
+                fdr = 0.001, fc = 2, size = 0.4, 
+                palette = c("#0E7C61", "#ff781f", "#d5c6aa"),
+                #palette = c("#1465AC", "#B31B21", "darkgray"),
+                genenames = as.vector(x$pan_gene_symbol),
+                legend = "right", 
+                alpha = 0.8,
+                top = 20,
+                select.top.method	= "padj",
+                font.label = c(10, "bold", "black"),
+                font.legend = "bold",
+                font.main = "bold",
+                ggtheme = ggplot2::theme_minimal())
+  p
+}
+```
+### MA Plots
+```{r}
+maPlot234 <- makeMA(df234vsMMMalpha05beta1) + ggtitle("MMM vs Super 234")
+maPlot234
+maPlot243 <- makeMA(df243vsMMMalpha05beta1) + ggtitle("MMM vs Super 243")
+maPlot243
+maPlot262 <- makeMA(df262vsMMMalpha05beta1) + ggtitle("MMM vs Super 262")
+maPlot262
+maPlotGLU <- makeMA(dfGLUvsMMMalpha05beta1) + ggtitle("MMM vs MMM GLU")
+maPlotGLU
+maPlotLACCAA <- makeMA(dfLACCAAvsMMMalpha05beta1) + ggtitle("MMM vs MMM LAC-CAA")
+maPlotLACCAA
+```
+```{r include = FALSE}
+ggsave(maPlot234, filename = "../figures/DESeq2/MAPlots/maplot243vsMMM.png", height=5, width=5)
+ggsave(maPlot243, filename = "../figures/DESeq2/MAPlots/maplot234vsMMM.png", height=5, width=5)
+ggsave(maPlot262, filename = "../figures/DESeq2/MAPlots/maplot262vsMMM.png", height=5, width=5)
+ggsave(maPlotGLU, filename = "../figures/DESeq2/MAPlots/maplotGLUvsMMM.png", height=5, width=5)
+ggsave(maPlotLACCAA, filename = "../figures/DESeq2/MAPlots/maplotLACCAAvsMMM.png", height=5, width=5)
+```
+
+### Genes similar between like samples
+
+I'd like to know what the common genes are between the different DEGs identified between samples and the MMM control. This will help me to identify commonalities and unique qualities of each supernatant. I will use the inner_join() function from dplyr to return GeneIDs that are in both A/B sigtab comparisons (regardless of log2fc). I will use anti_join() to return only genes that are unique to A, when compared to B. The tables are created below:  
+```{r}
+# identify genes that are in both A and B (agnostic of up/down regulated)
+match_A_262_B_LACC <- inner_join(sigtab262vsMMMalpha05beta1, sigtabLACCAAvsMMMalpha05beta1, by="GeneID", suffix=c("262","LACCAA"))
+match_A_262_B_LACC <- inner_join(sigtab262vsMMMalpha05beta1, sigtabLACCAAvsMMMalpha05beta1, by="GeneID", suffix=c("262","LACCAA"))
+match_A_234_B_243 <- inner_join(sigtab234vsMMMalpha05beta1, sigtab243vsMMMalpha05beta1, by="GeneID", suffix=c("234","243"))
+match_A_234_B_262 <- inner_join(sigtab234vsMMMalpha05beta1, sigtab262vsMMMalpha05beta1, by="GeneID", suffix=c("234","262"))
+match_A_243_B_262 <- inner_join(sigtab243vsMMMalpha05beta1, sigtab262vsMMMalpha05beta1, by="GeneID", suffix=c("234","262"))
+# Antimatch = genes that are in A, that are not in B (agnostic of up/down regulated)
+antimatch_A_234_B_243 <- anti_join(sigtab234vsMMMalpha05beta1, sigtab243vsMMMalpha05beta1, by="GeneID")
+antimatch_A_234_B_262 <- anti_join(sigtab234vsMMMalpha05beta1, sigtab262vsMMMalpha05beta1, by="GeneID")
+antimatch_A_234_B_262 <- anti_join(sigtab234vsMMMalpha05beta1, sigtab262vsMMMalpha05beta1, by="GeneID")
+antimatch_A_243_B_234 <- anti_join(sigtab243vsMMMalpha05beta1, sigtab234vsMMMalpha05beta1, by="GeneID")
+antimatch_A_243_B_262 <- anti_join(sigtab243vsMMMalpha05beta1, sigtab262vsMMMalpha05beta1, by="GeneID")
+antimatch_A_262_B_234 <- anti_join(sigtab262vsMMMalpha05beta1, sigtab234vsMMMalpha05beta1, by="GeneID")
+antimatch_A_262_B_243 <- anti_join(sigtab262vsMMMalpha05beta1, sigtab243vsMMMalpha05beta1, by="GeneID")
+```
+
+### Observations in DEGs
+
+SAUSA300_RS03250 is sarA transcription regulator. It is much more highly expressed in the glucose and lactate+caa controls compared to the MMM, or the supernatants, which are relatively similar.
+
+SAUSA300_RS10940 is AIP and is seen in 262/LACCAA  
+
+An isaA sceD mutant is attenuated for virulence, while SceD is essential for nasal colonization in cotton rats, thus demonstrating the importance of cell wall dynamics in host-pathogen interactions. (https://jb.asm.org/content/189/20/7316)
+
+*  SAUSA300_RS11295 is SceD (lytic transglycosylase) and is increased in log2fc and highly significant in 234, 243, GLU and LACCAA controls.  
+*  The regulatory protein SAUSA300_RS11565 doesn't have a log2fc greater than two in any sample.  
+*  SAUSA300_RS13915 is IsaA and it is not increased in abundance in any sample.
+
+* Could this be simply because S. aureus had a carbon source it liked? Could the likely source of nutrients just be amino acids and peptides? It is less likely that there was too much depleted from the media, since S. aureus grew well under these conditions. Potentially secondary metabolites were affecting its transcription to not be quite so virulent?  
+
+* The Staphylococcus aureus α-Acetolactate Synthase ALS Confers Resistance to Nitrosative Stress https://www.frontiersin.org/articles/10.3389/fmicb.2017.01273/full
+budA:  acetolactate decarboxylase	  
+
+* sarZ is increased in all supernatant conditions. Although, RNAIII and MgrA, sspA/B, and scpA, only increased in Supernatant 262. See https://www.ncbi.nlm.nih.gov/pubmed/18955469. These things considered, I think we are seeing that Supernanta 262 may promote dissemination and decrease biofilm forming expression patterns.  
+
+* cidA is a DEG in 234/243 whereas LrgA/B are DEGs in 262. read: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3133170/
+
+* thiD and thiM are boht DEGs in all supernatants
+
+* Leu-ilv BCAA synthetic genes are DEGs in 243 supernatant, but not in 234/262.
+
+* related to Leu-ilv is codY, which is highest in 243, but not DEG based on the parameters (alpha = .001, beta = 1) set.
+
+## Results for each condition compared to MMM+Glucose
+```{r}
+res234vsGLUalpha05beta1 <- results(dds, contrast = c("Group","sample_234","control_MMM_GLU"), 
+                                    alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res243vsGLUalpha05beta1 <- results(dds, contrast = c("Group","sample_243","control_MMM_GLU"), 
+                                    alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res262vsGLUalpha05beta1 <- results(dds, contrast = c("Group","sample_262","control_MMM_GLU"), 
+                                    alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+resLACCAAvsGLUalpha05beta1 <- results(dds, contrast = c("Group","control_MMM_LAC_CAA","control_MMM_GLU"), 
+                                    alpha = 0.05, lfcThreshold = 1, altHypothesis = "greaterAbs")
+
+summary(res234vsGLUalpha05beta1)
+summary(res243vsGLUalpha05beta1)
+summary(res262vsGLUalpha05beta1)
+summary(resLACCAAvsGLUalpha05beta1)
+```
+
+### Dataframe of results for each condition compared to Glucose for plotting
+```{r}
+df234vsGLUalpha05beta1 <- res2table(res234vsGLUalpha05beta1)
+df243vsGLUalpha05beta1 <- res2table(res243vsGLUalpha05beta1)
+df262vsGLUalpha05beta1 <- res2table(res262vsGLUalpha05beta1)
+dfLACCAAvsGLUalpha05beta1 <- res2table(resLACCAAvsGLUalpha05beta1)
+```
+### MA Plots
+```{r fig.height=4, fig.width=4, echo=FALSE}
+maPlot234vGLU <- makeMA(df234vsGLUalpha05beta1) + ggtitle("MMM+GLU vs Super 234")
+maPlot243vGLU <- makeMA(df243vsGLUalpha05beta1) + ggtitle("MMM+GLU vs Super 243")
+maPlot262vGLU <- makeMA(df262vsGLUalpha05beta1) + ggtitle("MMM+GLU vs Super 262")
+maPlotLACCAAvGLU <- makeMA(dfLACCAAvsGLUalpha05beta1) + ggtitle("MMM+GLU vs MMM+LAC+CAA")
+maPlot234vGLU
+maPlot243vGLU
+maPlot262vGLU
+maPlotLACCAAvGLU
+```
+```{r include = FALSE}
+ggsave(maPlot234vGLU, filename = "../figures/DESeq2/MAPlots/maPlot234vGLU.png", height=5, width=5)
+ggsave(maPlot243vGLU, filename = "../figures/DESeq2/MAPlots/maPlot243vGLU.png", height=5, width=5)
+ggsave(maPlot262vGLU, filename = "../figures/DESeq2/MAPlots/maPlot262vGLU.png", height=5, width=5)
+ggsave(maPlotLACCAAvGLU, filename = "../figures/DESeq2/MAPlots/maPlotLACCAAvGLU.png", height=5, width=5)
+```
+
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .05 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtab234vsGLUalpha05beta1 <- filter(df234vsGLUalpha05beta1, padj < .05)
+sigtab243vsGLUalpha05beta1 <- filter(df243vsGLUalpha05beta1, padj < .05)
+sigtab262vsGLUalpha05beta1 <- filter(df262vsGLUalpha05beta1, padj < .05)
+sigtabLACCAAvsGLUalpha05beta1 <- filter(dfLACCAAvsGLUalpha05beta1, padj < .05)
+```
+Export csv tables of DEGs.
+```{r}
+write_csv(sigtab234vsGLUalpha05beta1, path = "../data/DESeq2/sigtab234vsGLUalpha05beta1.csv")
+write_csv(sigtab243vsGLUalpha05beta1, path = "../data/DESeq2/sigtab243vsGLUalpha05beta1.csv")
+write_csv(sigtab262vsGLUalpha05beta1, path = "../data/DESeq2/sigtab262vsGLUalpha05beta1.csv")
+write_csv(sigtabLACCAAvsGLUalpha05beta1, path = "../data/DESeq2/sigtabLACCAAvsGLUalpha05beta1.csv")
+```
+
+## Results for each condition compared to MMM+LAC+CAA
+```{r}
+res234vsLACCAAalpha001beta1 <- results(dds, contrast = c("Group","sample_234","control_MMM_LAC_CAA"), 
+                                    alpha = 0.001, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res243vsLACCAAalpha001beta1 <- results(dds, contrast = c("Group","sample_243","control_MMM_LAC_CAA"), 
+                                    alpha = 0.001, lfcThreshold = 1, altHypothesis = "greaterAbs")
+res262vsLACCAAalpha001beta1 <- results(dds, contrast = c("Group","sample_262","control_MMM_LAC_CAA"), 
+                                    alpha = 0.001, lfcThreshold = 1, altHypothesis = "greaterAbs")
+resGLUvsLACCAAalpha001beta1 <- results(dds, contrast = c("Group","control_MMM_GLU","control_MMM_LAC_CAA"), 
+                                    alpha = 0.001, lfcThreshold = 1, altHypothesis = "greaterAbs")
+summary(res234vsLACCAAalpha001beta1)
+summary(res243vsLACCAAalpha001beta1)
+summary(res262vsLACCAAalpha001beta1)
+summary(resGLUvsLACCAAalpha001beta1)
+```
+### Dataframe of results for each condition compared to lactate casamino acids control for plotting
+```{r}
+df234vsLACCAAalpha001beta1 <- res2table(res234vsLACCAAalpha001beta1)
+df243vsLACCAAalpha001beta1 <- res2table(res243vsLACCAAalpha001beta1)
+df262vsLACCAAalpha001beta1 <- res2table(res262vsLACCAAalpha001beta1)
+dfGLUvsLACCAAalpha001beta1 <- res2table(resGLUvsLACCAAalpha001beta1)
+```
+### MA Plots
+```{r fig.height=4, fig.width=4, echo=FALSE}
+maPlot234vLACCAA <- makeMA(df234vsLACCAAalpha001beta1) + ggtitle("MMM+LAC+CAA vs Super 234")
+maPlot243vLACCAA <- makeMA(df243vsLACCAAalpha001beta1) + ggtitle("MMM+LAC+CAA vs Super 243")
+maPlot262vLACCAA <- makeMA(df262vsLACCAAalpha001beta1) + ggtitle("MMM+LAC+CAA vs Super 262")
+maPlotGLUvLACCAA <- makeMA(dfGLUvsLACCAAalpha001beta1) + ggtitle("MMM+LAC+CAA vs MMM+GLU")
+maPlot234vLACCAA
+maPlot243vLACCAA
+maPlot262vLACCAA
+maPlotGLUvLACCAA
+```
+```{r include = FALSE}
+ggsave(maPlot234vLACCAA, filename = "../figures/DESeq2/MAPlots/maPlot234vLACCAA.png", height=5, width=5)
+ggsave(maPlot243vLACCAA, filename = "../figures/DESeq2/MAPlots/maPlot243vLACCAA.png", height=5, width=5)
+ggsave(maPlot262vLACCAA, filename = "../figures/DESeq2/MAPlots/maPlot262vLACCAA.png", height=5, width=5)
+ggsave(maPlotGLUvLACCAA, filename = "../figures/DESeq2/MAPlots/maPlotGLUvLACCAA.png", height=5, width=5)
+```
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .001 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtab234vsLACCAAalpha001beta1 <- filter(df234vsLACCAAalpha001beta1, padj < .001)
+sigtab243vsLACCAAalpha001beta1 <- filter(df243vsLACCAAalpha001beta1, padj < .001)
+sigtab262vsLACCAAalpha001beta1 <- filter(df262vsLACCAAalpha001beta1, padj < .001)
+sigtabGLUvsLACCAAalpha001beta1 <- filter(dfGLUvsLACCAAalpha001beta1, padj < .001)
+```
+Export csv tables of DEGs.
+```{r}
+write_csv(sigtab234vsLACCAAalpha001beta1, path = "../data/DESeq2/sigtab234vsLACCAAalpha001beta1.csv")
+write_csv(sigtab243vsLACCAAalpha001beta1, path = "../data/DESeq2/sigtab243vsLACCAAalpha001beta1.csv")
+write_csv(sigtab262vsLACCAAalpha001beta1, path = "../data/DESeq2/sigtab262vsLACCAAalpha001beta1.csv")
+write_csv(sigtabGLUvsLACCAAalpha001beta1, path = "../data/DESeq2/sigtabGLUvsLACCAAalpha001beta1.csv")
+```
+
+# Differential Abundance: Sample vs. Control
+## Run DESeq2 function on dataset using "Sample_Or_Control" as the design factor.
+Format our data into a DESeqDataSet object using "Sample_Or_Control" as the design factor
+```{r}
+# make DESeq2 object
+ddsSE_SamplevControl <- DESeqDataSetFromMatrix(
+  countData = counts,
+  colData = coldata,
+  design= ~ Sample_Or_Control)
+class(ddsSE_SamplevControl)
+```
+Minimal filtering of low counts before any analysis.
+```{r}
+keep <- rowSums(counts(ddsSE_SamplevControl)) >= 10
+ddsSE_SamplevControl <- ddsSE_SamplevControl[keep,]
+```
+DESeq 
+```{r}
+dds_SamplevControl <- DESeq(ddsSE_SamplevControl, betaPrior = FALSE)
+```
+## Results for Sample vs Control
+```{r}
+resultsNames(dds_SamplevControl)
+```
+results column meanings (Seen in "sigtab" documents)
+[1] "mean of normalized counts for all samples"             
+[2] "log2 fold change (MLE): condition treated vs untreated"
+[3] "standard error: condition treated vs untreated"        
+[4] "Wald statistic: condition treated vs untreated"        
+[5] "Wald test p-value: condition treated vs untreated"     
+[6] "BH adjusted p-values"
+
+```{r}
+resSamplevControlalpha001beta1 <- results(dds_SamplevControl, 
+                                    contrast = c("Sample_Or_Control","sample","control"), 
+                                    alpha = 0.001, lfcThreshold = 1, altHypothesis = "greaterAbs"
+                                    )
+
+summary(resSamplevControlalpha001beta1)
+```
+### Dataframe of results
+```{r}
+dfSamplevControlalpha001beta1 <- res2table(resSamplevControlalpha001beta1)
+```
+### MA Plot
+```{r fig.height=4, fig.width=4, echo=FALSE}
+maPlotSamplevControl <- makeMA(dfSamplevControlalpha001beta1) + ggtitle("Control samples vs. Supernatants")
+maPlotSamplevControl
+```
+```{r}
+ggsave(maPlotSamplevControl, filename = "../figures/DESeq2/MAPlots/maPlotSamplevControl.png", height = 5, width = 5)
+```
+
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .001 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtabSamplevControl <- filter(dfSamplevControlalpha001beta1, padj < .001)
+```
+
+### Export data files
+```{r}
+write_csv(sigtabSamplevControl, path = "../data/DESeq2/sigtabSamplevControl.csv")
+```
+
+# Differential abundance: Sample vs Control - Individual Controls
+Filter samples from dataset so we only have the MMM+LACCAA or the MMM+GLU controls to compare to. I am starting with the ddsSE_SamplevControl Summarized Experiment.
+```{r}
+LACCAAonly <- c("control_MMM_LAC_CAA", "sample_234", "sample_243", "sample_262")
+GLUonly <- c("control_MMM_GLU", "sample_234", "sample_243", "sample_262")
+# Subset Summarized experiment object to just those samples in LACCAAonly
+ddsSE_SamplevControl_LACCAAonly <- ddsSE_SamplevControl[, ddsSE_SamplevControl$Group %in% LACCAAonly]
+# Subset Summarized experiment object to just those samples in GLUonly
+ddsSE_SamplevControl_GLUonly <- ddsSE_SamplevControl[, ddsSE_SamplevControl$Group %in% GLUonly]
+```
+Minimal filtering of low counts before any analysis.
+```{r}
+# dataset with Lactate/CAA control
+keep <- rowSums(counts(ddsSE_SamplevControl_LACCAAonly)) >= 10
+ddsSE_SamplevControl_LACCAAonly <- ddsSE_SamplevControl_LACCAAonly[keep,]
+# dataset with Glucose control
+keep <- rowSums(counts(ddsSE_SamplevControl_GLUonly)) >= 10
+ddsSE_SamplevControl_GLUonly <- ddsSE_SamplevControl_GLUonly[keep,]
+```
+
+## Run DESeq2 function on dataset using "Sample_Or_Control" as the design factor.
+```{r}
+dds_SamplevControl_LACCAAonly <- DESeq(ddsSE_SamplevControl_LACCAAonly, betaPrior = FALSE)
+dds_SamplevControl_GLUonly <- DESeq(ddsSE_SamplevControl_GLUonly, betaPrior = FALSE)
+```
+## Results for Sample vs MMM+LAC+CAA
+```{r}
+resSamplevControlLACCAAonly <- results(dds_SamplevControl_LACCAAonly, lfcThreshold = 1, alpha = .05, altHypothesis = "greaterAbs")
+summary(resSamplevControlLACCAAonly)
+```
+### Dataframe of results
+```{r}
+dfSamplevControlLACCAAonly <- res2table(resSamplevControlLACCAAonly)
+```
+### MA Plots
+```{r fig.height=4, fig.width=4, echo=FALSE}
+maPlotSamplevControlLACCAA <- makeMA(dfSamplevControlLACCAAonly) + ggtitle("MMM+LAC+CAA vs. Supernatants")
+maPlotSamplevControlLACCAA
+```
+```{r}
+ggsave(maPlotSamplevControlLACCAA, filename = "../figures/DESeq2/MAPlots/maPlotSamplevControl_LACCAAonly.png", height = 5, width = 5)
+```
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .001 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtabSamplevControlLACCAAonly <- filter(dfSamplevControlLACCAAonly, padj < .05)
+```
+
+### Export data files
+```{r}
+write_csv(sigtabSamplevControlLACCAAonly, path = "../data/DESeq2/sigtabSamplevControl_LACCAAonly.csv")
+```
+
+## Results for Sample vs Glu control
+```{r}
+resSamplevControlGLUonly <- results(dds_SamplevControl_GLUonly, lfcThreshold = 1, alpha = .05, altHypothesis = "greaterAbs")
+summary(resSamplevControlGLUonly)
+resultsNames(dds_SamplevControl_GLUonly)
+```
+### Dataframe of results
+```{r}
+geneNames <- c("pdf", "nanT", "nanA", "nanK", "nanE", "nagA", "nagB", "glcC","rocA","rocF","rocD","putA","gudB","sucA","sucC","sdhA","fumC", "mqo1","pckA","spa","SAUSA300_RS09510")
+```
+```{r}
+dfSamplevControlGLUonly <- res2table(resSamplevControlGLUonly)
+dfSamplevControlGLUonly <- mutate(dfSamplevControlGLUonly, pan_gene_symbol_RS = ifelse(pan_gene_symbol == "-", GeneID, pan_gene_symbol),
+                                  plotName = ifelse(pan_gene_symbol_RS %in% geneNames, pan_gene_symbol_RS, ""))
+```
+### MA Plots
+
+```{r}
+makeMA <- function(x){
+  p <- ggmaplot(x, 
+                #fc of 2 corresponds to the log2fc of 1 we tested in our hyp. in the results command
+                fdr = 0.05, fc = 2, 
+                size = 2, 
+                palette = c("#d7462e", "#8ac1be", "lightgrey"),
+                #palette = c("#1465AC", "#B31B21", "darkgray"),
+                genenames = as.vector(x$plotName),
+                legend = "right", 
+                top = 50,
+                select.top.method	= "padj",
+                font.label = c(10, "bold", "black"),
+                font.legend = "bold",
+                font.main = "bold",
+                ggtheme = ggpubr::theme_pubr())
+  p
+}
+```
+
+```{r}
+maPlotSamplevControlGLU <- makeMA(dfSamplevControlGLUonly)
+maPlotSamplevControlGLU
+```
+
+```{r}
+ggsave(maPlotSamplevControlGLU, filename = "../figures/DESeq2/MAPlots/maPlotSamplevControl_GLUonly.png", height = 5, width = 5)
+```
+### Final tables of DEGs
+Filter out everything that is not significant, so the table will only be made up of genes that have a greater than 1 log2fc and the padj is < .05 (This evaluation of significance was dictated in the original results function)
+```{r}
+sigtabSamplevControlGLUonly <- filter(dfSamplevControlGLUonly, padj < .05)
+```
+
+### Export data files
+```{r}
+write_csv(sigtabSamplevControlGLUonly, path = "../data/DESeq2/sigtabSamplevControl_GLUonly.csv")
+```
+### Volcano plots
+
+####  Results for volcano
+Have to recalcualate results because I need a dataframe with all the results and their adjusted p-vals and l2fc changes for this plot. 
+```{r}
+resSamplevControlGLUonly_volcano <- results(dds_SamplevControl_GLUonly)
+summary(resSamplevControlGLUonly_volcano)
+resultsNames(dds_SamplevControl_GLUonly)
+```
+#### Dataframe of results
+```{r}
+dfSamplevControlGLUonly_volcano <- res2table(resSamplevControlGLUonly_volcano)
+dfSamplevControlGLUonly_volcano <- mutate(dfSamplevControlGLUonly_volcano, pan_gene_symbol_RS = ifelse(pan_gene_symbol == "-", GeneID, pan_gene_symbol),
+                                  plotName = ifelse(pan_gene_symbol_RS %in% geneNames, pan_gene_symbol_RS, "-"))
+dim(dfSamplevControlGLUonly_volcano)
+```
+
+### Function for Volcano Plotting
+```{r}
+RunEnhancedVolcano <- function(x){
+  p <- EnhancedVolcano(x,
+    lab = x$pan_gene_symbol,
+    selectLab = geneNames,
+    transcriptLabSize = 4.0,
+    x = "log2FoldChange",
+    y = "padj",
+    xlim = c(-5, 5),
+    title = "",
+    subtitle = "",
+    caption = "",
+    hlineCol = 'black',
+    vlineCol = 'black',
+    colAlpha = 4/5,
+    transcriptPointSize = 2,
+    FCcutoff = 1,
+    pCutoff = .05,
+    transcriptLabCol = 'black',
+    cutoffLineCol = 'black',
+    drawConnectors = TRUE,
+    widthConnectors = .5,
+    colConnectors = 'grey30',
+    border = "full",
+#    legend=c('NS','Log (base 2) fold-change','P value',
+#      'P value & Log (base 2) fold-change'),
+#    selectLab = unique(vfGeneNames$VF_Name),
+    col = c("grey30","#EEC537", "#8AC1BE", "#D7462E")#,
+    #legendPosition = "none"
+    )
+  p + ggpubr::theme_pubr() +
+  theme(legend.position = "none")
+}
+```
+
+```{r, fig.height=10, fig.width=10}
+glu_volcano <- RunEnhancedVolcano(dfSamplevControlGLUonly_volcano)
+glu_volcano
+```
+
+
+
+
+
+
+
+
+
+
+
+# Session Info
+```{r}
+sessionInfo()
+```
+

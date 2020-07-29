@@ -1,0 +1,92 @@
+Kingdom,Phylum,Class,Order,Family,Genus,Species,TaxName,Prevalence_CRS,Prevalence_NonCRS,Abundance_CRS,Abundance_NonCRS,PercentAbundance_CRS,PercentAbundance_NonCRS,avgRelAbun_CRS,avgRelAbun_NonCRS
+Bacteria,Actinobacteria,Actinobacteria,Actinomycetales,Actinomycetaceae,Actinomyces,NA,Actinomyces,10,4,40,196,0.0328,0.5158,0.03278688524590164,0.5157894736842106
+Bacteria,Actinobacteria,Actinobacteria,Actinomycetales,Actinomycetaceae,Actinomyces,graevenitzii,Actinomyces graevenitzii,5,2,35,7,0.0287,0.0184,0.028688524590163935,0.01842105263157895
+Bacteria,Actinobacteria,Actinobacteria,Actinomycetales,Actinomycetaceae,Actinomyces,odontolyticus,Actinomyces odontolyticus,17,8,185,234,0.1516,0.6158,0.15163934426229508,0.6157894736842104
+Bacteria,Verrucomicrobia,Verrucomicrobiae,Verrucomicrobiales,Akkermansiaceae,Akkermansia,muciniphila,Akkermansia muciniphila,1,1,147,1,0.1205,0.0026,0.12049180327868853,0.002631578947368421
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Anaerococcus,NA,Anaerococcus,9,6,699,83,0.573,0.2184,0.5729508196721311,0.21842105263157893
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Anaerococcus,nagyae,Anaerococcus nagyae,2,1,11,9,0.009,0.0237,0.009016393442622951,0.023684210526315787
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Anaerococcus,octavius,Anaerococcus octavius,7,8,232,118,0.1902,0.3105,0.1901639344262295,0.31052631578947365
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Anaerococcus,provenciensis,Anaerococcus provenciensis,1,3,2,93,0.0016,0.2447,0.001639344262295082,0.24473684210526317
+Bacteria,Actinobacteria,Coriobacteriia,Coriobacteriales,Atopobiaceae,Atopobium,parvulum,Atopobium parvulum,6,3,44,15,0.0361,0.0395,0.036065573770491806,0.039473684210526314
+Bacteria,Actinobacteria,Coriobacteriia,Coriobacteriales,Atopobiaceae,Atopobium,rimae,Atopobium rimae,1,1,23,8,0.0189,0.0211,0.01885245901639344,0.021052631578947368
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Bacteroidaceae,Bacteroides,NA,Bacteroides,2,1,1521,67,1.2467,0.1763,1.2467213114754099,0.1763157894736842
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Bacteroidaceae,Bacteroides,acidifaciens,Bacteroides acidifaciens,2,1,208,71,0.1705,0.1868,0.17049180327868851,0.1868421052631579
+Bacteria,Epsilonbacteraeota,Campylobacteria,Campylobacterales,Campylobacteraceae,Campylobacter,NA,Campylobacter,7,4,98,129,0.0803,0.3395,0.08032786885245902,0.3394736842105263
+Bacteria,Epsilonbacteraeota,Campylobacteria,Campylobacterales,Campylobacteraceae,Campylobacter,concisus,Campylobacter concisus,13,5,219,208,0.1795,0.5474,0.1795081967213115,0.5473684210526315
+Bacteria,Epsilonbacteraeota,Campylobacteria,Campylobacterales,Campylobacteraceae,Campylobacter,gracilis,Campylobacter gracilis,3,NA,308,NA,0.2525,NA,0.25245901639344265,NA
+Bacteria,Epsilonbacteraeota,Campylobacteria,Campylobacterales,Campylobacteraceae,Campylobacter,ureolyticus,Campylobacter ureolyticus,1,2,8,16,0.0066,0.0421,0.006557377049180328,0.04210526315789474
+Bacteria,Bacteroidetes,Bacteroidia,Flavobacteriales,Flavobacteriaceae,Capnocytophaga,leadbetteri,Capnocytophaga leadbetteri,6,1,51,25,0.0418,0.0658,0.04180327868852459,0.06578947368421052
+Bacteria,Bacteroidetes,Bacteroidia,Flavobacteriales,Flavobacteriaceae,Capnocytophaga,ochracea,Capnocytophaga ochracea,1,NA,36,NA,0.0295,NA,0.029508196721311473,NA
+Bacteria,Actinobacteria,Actinobacteria,Propionibacteriales,Propionibacteriaceae,Cutibacterium,acnes,Cutibacterium acnes,34,12,1220,1298,1,3.4158,1,3.4157894736842103
+Bacteria,Actinobacteria,Actinobacteria,Propionibacteriales,Propionibacteriaceae,Cutibacterium,granulosum,Cutibacterium granulosum,9,8,148,72,0.1213,0.1895,0.12131147540983607,0.18947368421052632
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Dialister,invisus,Dialister invisus,5,2,61,17,0.05,0.0447,0.05,0.04473684210526316
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Dialister,micraerophilus,Dialister micraerophilus,NA,1,NA,39,NA,0.1026,NA,0.10263157894736842
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Dialister,pneumosintes,Dialister pneumosintes,8,3,393,28,0.3221,0.0737,0.3221311475409836,0.0736842105263158
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Dialister,propionicifaciens,Dialister propionicifaciens,2,3,50,24,0.041,0.0632,0.040983606557377046,0.06315789473684211
+Bacteria,Proteobacteria,Gammaproteobacteria,Betaproteobacteriales,Neisseriaceae,Eikenella,NA,Eikenella,1,NA,21,NA,0.0172,NA,0.01721311475409836,NA
+Bacteria,Proteobacteria,Gammaproteobacteria,Betaproteobacteriales,Neisseriaceae,Eikenella,corrodens,Eikenella corrodens,5,NA,63,NA,0.0516,NA,0.05163934426229508,NA
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Finegoldia,magna,Finegoldia magna,6,9,1392,200,1.141,0.5263,1.140983606557377,0.5263157894736842
+Bacteria,Fusobacteria,Fusobacteriia,Fusobacteriales,Fusobacteriaceae,Fusobacterium,NA,Fusobacterium,16,3,1813,34,1.4861,0.0895,1.4860655737704918,0.08947368421052633
+Bacteria,Fusobacteria,Fusobacteriia,Fusobacteriales,Fusobacteriaceae,Fusobacterium,necrophorum,Fusobacterium necrophorum,1,NA,22,NA,0.018,NA,0.0180327868852459,NA
+Bacteria,Fusobacteria,Fusobacteriia,Fusobacteriales,Fusobacteriaceae,Fusobacterium,nucleatum,Fusobacterium nucleatum,20,5,4108,1144,3.3672,3.0105,3.3672131147540982,3.0105263157894737
+Bacteria,Fusobacteria,Fusobacteriia,Fusobacteriales,Fusobacteriaceae,Fusobacterium,periodonticum,Fusobacterium periodonticum,13,2,575,169,0.4713,0.4447,0.47131147540983603,0.4447368421052632
+Bacteria,Firmicutes,Bacilli,Bacillales,Family_XI,Gemella,NA,Gemella,13,8,199,89,0.1631,0.2342,0.16311475409836065,0.23421052631578945
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Carnobacteriaceae,Granulicatella,NA,Granulicatella,NA,1,NA,344,NA,0.9053,NA,0.9052631578947368
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Carnobacteriaceae,Granulicatella,adiacens,Granulicatella adiacens,14,7,170,640,0.1393,1.6842,0.13934426229508196,1.6842105263157896
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Carnobacteriaceae,Granulicatella,elegans,Granulicatella elegans,4,2,64,13,0.0525,0.0342,0.05245901639344262,0.03421052631578947
+Bacteria,Fusobacteria,Fusobacteriia,Fusobacteriales,Leptotrichiaceae,Leptotrichia,NA,Leptotrichia,8,1,151,13,0.1238,0.0342,0.12377049180327869,0.034210526315789476
+Bacteria,Firmicutes,Clostridia,Clostridiales,Lachnospiraceae,Oribacterium,NA,Oribacterium,2,NA,24,NA,0.0197,NA,0.019672131147540985,NA
+Bacteria,Firmicutes,Clostridia,Clostridiales,Lachnospiraceae,Oribacterium,asaccharolyticum,Oribacterium asaccharolyticum,3,2,13,5,0.0107,0.0132,0.010655737704918032,0.013157894736842105
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Parvimonas,micra,Parvimonas micra,13,1,480,7,0.3934,0.0184,0.39344262295081966,0.01842105263157895
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Peptoniphilus,NA,Peptoniphilus,5,8,46,319,0.0377,0.8395,0.03770491803278688,0.8394736842105263
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Peptoniphilus,duerdenii,Peptoniphilus duerdenii,1,NA,40,NA,0.0328,NA,0.03278688524590164,NA
+Bacteria,Firmicutes,Clostridia,Clostridiales,Family_XI,Peptoniphilus,lacrimalis,Peptoniphilus lacrimalis,1,NA,39,NA,0.032,NA,0.031967213114754096,NA
+Bacteria,Firmicutes,Clostridia,Clostridiales,Peptostreptococcaceae,Peptostreptococcus,stomatis,Peptostreptococcus stomatis,8,2,149,7,0.1221,0.0184,0.1221311475409836,0.01842105263157895
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Porphyromonadaceae,Porphyromonas,NA,Porphyromonas,3,2,62,106,0.0508,0.2789,0.05081967213114754,0.2789473684210526
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Porphyromonadaceae,Porphyromonas,endodontalis,Porphyromonas endodontalis,10,3,641,150,0.5254,0.3947,0.5254098360655738,0.39473684210526316
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Porphyromonadaceae,Porphyromonas,gingivalis,Porphyromonas gingivalis,1,NA,20,NA,0.0164,NA,0.01639344262295082,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Porphyromonadaceae,Porphyromonas,pasteri,Porphyromonas pasteri,11,3,293,44,0.2402,0.1158,0.2401639344262295,0.11578947368421053
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,NA,Prevotella,20,7,2553,279,2.0926,0.7342,2.0926229508196723,0.7342105263157894
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,baroniae,Prevotella baroniae,3,NA,62,NA,0.0508,NA,0.05081967213114754,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,conceptionensis,Prevotella conceptionensis,2,NA,76,NA,0.0623,NA,0.06229508196721311,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,dentalis,Prevotella dentalis,2,NA,51,NA,0.0418,NA,0.04180327868852459,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,denticola,Prevotella denticola,1,1,1,26,8e-4,0.0684,8.19672131147541e-4,0.06842105263157895
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,disiens,Prevotella disiens,1,NA,32,NA,0.0262,NA,0.02622950819672131,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,histicola,Prevotella histicola,8,4,431,208,0.3533,0.5474,0.35327868852459016,0.5473684210526316
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,intermedia,Prevotella intermedia,3,1,242,191,0.1984,0.5026,0.19836065573770492,0.5026315789473684
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,loescheii,Prevotella loescheii,3,NA,20,NA,0.0164,NA,0.01639344262295082,NA
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,melaninogenica,Prevotella melaninogenica,13,5,478,265,0.3918,0.6974,0.3918032786885246,0.6973684210526316
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,nanceiensis,Prevotella nanceiensis,7,3,115,28,0.0943,0.0737,0.09426229508196722,0.07368421052631578
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,nigrescens,Prevotella nigrescens,7,2,885,60,0.7254,0.1579,0.7254098360655737,0.15789473684210525
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,oris,Prevotella oris,15,2,1222,17,1.0016,0.0447,1.001639344262295,0.04473684210526316
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,pallens,Prevotella pallens,6,5,137,78,0.1123,0.2053,0.11229508196721312,0.20526315789473684
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,salivae,Prevotella salivae,9,4,349,219,0.2861,0.5763,0.2860655737704918,0.5763157894736842
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,shahii,Prevotella shahii,NA,1,NA,42,NA,0.1105,NA,0.1105263157894737
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Prevotellaceae,Prevotella,veroralis,Prevotella veroralis,NA,1,NA,25,NA,0.0658,NA,0.06578947368421052
+Bacteria,Actinobacteria,Actinobacteria,Micrococcales,Micrococcaceae,Rothia,NA,Rothia,5,4,41,463,0.0336,1.2184,0.03360655737704918,1.218421052631579
+Bacteria,Actinobacteria,Actinobacteria,Micrococcales,Micrococcaceae,Rothia,dentocariosa,Rothia dentocariosa,13,5,79,450,0.0648,1.1842,0.06475409836065574,1.1842105263157894
+Bacteria,Actinobacteria,Actinobacteria,Micrococcales,Micrococcaceae,Rothia,mucilaginosa,Rothia mucilaginosa,10,5,130,215,0.1066,0.5658,0.10655737704918034,0.5657894736842105
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Selenomonas,NA,Selenomonas,12,3,177,99,0.1451,0.2605,0.14508196721311475,0.26052631578947366
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Selenomonas,artemidis,Selenomonas artemidis,2,1,34,1,0.0279,0.0026,0.027868852459016394,0.002631578947368421
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Selenomonas,infelix,Selenomonas infelix,3,1,44,10,0.0361,0.0263,0.036065573770491806,0.02631578947368421
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Selenomonas,noxia,Selenomonas noxia,5,NA,217,NA,0.1779,NA,0.1778688524590164,NA
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Selenomonas,sputigena,Selenomonas sputigena,6,3,42,23,0.0344,0.0605,0.03442622950819672,0.060526315789473685
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,NA,Streptococcus,31,16,6926,2218,5.677,5.8368,5.677049180327869,5.836842105263158
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,anginosus,Streptococcus anginosus,3,NA,35,NA,0.0287,NA,0.028688524590163935,NA
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,constellatus,Streptococcus constellatus,2,1,24,96,0.0197,0.2526,0.019672131147540982,0.25263157894736843
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,intermedius,Streptococcus intermedius,7,1,3458,2,2.8344,0.0053,2.8344262295081966,0.005263157894736842
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,oralis,Streptococcus oralis,3,NA,47,NA,0.0385,NA,0.03852459016393443,NA
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,pneumoniae,Streptococcus pneumoniae,16,2,10743,47,8.8057,0.1237,8.805737704918032,0.12368421052631577
+Bacteria,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Streptococcus,sanguinis,Streptococcus sanguinis,6,2,25,92,0.0205,0.2421,0.020491803278688527,0.24210526315789474
+Bacteria,Bacteroidetes,Bacteroidia,Bacteroidales,Tannerellaceae,Tannerella,forsythia,Tannerella forsythia,7,1,172,6,0.141,0.0158,0.14098360655737704,0.015789473684210527
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,NA,Treponema,3,NA,75,NA,0.0615,NA,0.06147540983606558,NA
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,denticola,Treponema denticola,2,NA,81,NA,0.0664,NA,0.06639344262295081,NA
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,lecithinolyticum,Treponema lecithinolyticum,1,1,1,11,8e-4,0.0289,8.19672131147541e-4,0.028947368421052628
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,medium,Treponema medium,2,1,36,58,0.0295,0.1526,0.029508196721311476,0.15263157894736845
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,putidum,Treponema putidum,3,NA,87,NA,0.0713,NA,0.07131147540983607,NA
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,socranskii,Treponema socranskii,3,1,21,1,0.0172,0.0026,0.01721311475409836,0.002631578947368421
+Bacteria,Spirochaetes,Spirochaetia,Spirochaetales,Spirochaetaceae,Treponema,vincentii,Treponema vincentii,3,1,8,29,0.0066,0.0763,0.006557377049180328,0.07631578947368423
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Veillonella,NA,Veillonella,21,10,2239,1133,1.8352,2.9816,1.8352459016393443,2.9815789473684213
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Veillonella,dispar,Veillonella dispar,11,6,131,442,0.1074,1.1632,0.10737704918032787,1.1631578947368422
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Veillonella,parvula,Veillonella parvula,13,8,356,222,0.2918,0.5842,0.29180327868852457,0.5842105263157895
+Bacteria,Firmicutes,Negativicutes,Selenomonadales,Veillonellaceae,Veillonella,rogosae,Veillonella rogosae,10,3,170,117,0.1393,0.3079,0.13934426229508196,0.3078947368421053

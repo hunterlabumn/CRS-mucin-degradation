@@ -1,0 +1,251 @@
+---
+title: "R Notebook"
+---
+# Setup
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(phyloseq)
+library(naniar)
+```
+
+# Load in data
+## Sample Data from filtered phyloseq objects
+The clinical data is sourced from the filtered dataset originating in the Preprocessing.Rmd notebook.
+```{r}
+filteredData <- readRDS("../data/PHYLOSEQ_DATA/phyloseq_filtered_MAR2020.rds")
+clinicalData <- data.frame(sample_data(filteredData))
+clinicalData
+# Make it easier to find data from CRS/non-CRS samples
+nonCRSData <- filter(clinicalData, DIAG_CRS == "Healthy")
+CRSData <- filter(clinicalData, !DIAG_CRS == "Healthy")
+```
+## Sample Order from heatmap clustering in Abundance_Analysis_TopTaxa.Rmd
+Importing taxa heatmap to extract rownames for ordering samples in plots
+```{r}
+heatmap.CRS.df <- readRDS("../data/heatmap_CRS_df.rds")
+CRSsampleOrder <- colnames(heatmap.CRS.df)
+```
+```{r}
+heatmap.NonCRS.df <- readRDS("../data/heatmap_NonCRS_df.rds")
+NonCRSsampleOrder <- colnames(heatmap.NonCRS.df)
+```
+
+
+# Plotting summary clinical data
+## Snot20 total
+```{r fig.height=4, fig.width=3}
+snot20 <- clinicalData %>%
+  filter(SNOT20_COMPLETE == "Complete") %>%
+  select(subject_id, DIAG_CRS, SNOT20_TOTAL) %>%
+  filter(!is.na(SNOT20_TOTAL))
+
+p <- ggboxplot(snot20, x = "DIAG_CRS", y = "SNOT20_TOTAL",
+          color = "DIAG_CRS", palette = "jco",
+          add = "jitter") + theme(legend.position = "") + 
+  labs(x="", y="SNOT20 Total")
+#  Add p-value
+p + stat_compare_means(method = "t.test", label.y = 5)
+```
+
+## Sinus Factors
+### CRS dataset
+```{r}
+sinusFactorsCRS <- clinicalData %>%
+  select(SAMPLE_NAME, DIAG_CRS, contains("SINUS_FACTORS")) %>%
+  select(-contains(c("FESS", "OTHER"))) %>%
+  filter(!is.na(SINUS_FACTORS_COMPLETE)) %>%
+  select(-SINUS_FACTORS_COMPLETE, -SINUS_FACTORS_POLYPOIDCHANGE) %>%
+  dplyr::rename(Smoker = SINUS_FACTORS_SMOKER,
+                Polyps = SINUS_FACTORS_POLYPS, 
+                GERD = SINUS_FACTORS_GERD,
+                Asthma = SINUS_FACTORS_ASTHMA,
+                Allergies = SINUS_FACTORS_ALLERGIES) %>%
+  pivot_longer(cols = c("Smoker","Polyps", "GERD", "Asthma", "Allergies"), names_to = "FACTOR", values_to = "boo") %>%
+  mutate(BOOL = ifelse(boo == c(1), TRUE, FALSE)) %>%
+  filter(DIAG_CRS == "CRS")
+sinusFactorsCRS
+```
+
+```{r fig.width=8, fig.height=3}
+#1.1
+sinusfactorsTableCRS <- ggplot(sinusFactorsCRS, aes(x=SAMPLE_NAME, y=FACTOR)) + 
+  geom_tile(colour = "whitesmoke",size=.5, aes(fill = BOOL)) +
+  #geom_point(aes(color = BOOL)) + # Make the squares dots instead
+  #facet_grid(cols = vars(DIAG_CRS), scales = "free_x", space = "free") +
+  scale_x_discrete(breaks = CRSsampleOrder, 
+                   limits = CRSsampleOrder,
+                   expand = c(0,0)) + #Make the boxes square
+  scale_y_discrete(expand = c(0,0)) + #Make the boxes square
+  coord_fixed(ratio=1) +  #Make the boxes square
+  scale_fill_manual(values = c("white", "black")) +
+  #scale_fill_manual(values = c("white", "white")) + # Make the squares dots instead
+  #scale_color_manual(values = c("white", "black")) + # Make the squares dots instead
+  theme_minimal(base_size = 10) + 
+  theme(legend.position = "",
+        axis.text.x = element_blank(),
+        #axis.text.x = element_text(angle=90),
+        axis.ticks = element_blank(),
+        axis.title = element_blank())
+sinusfactorsTableCRS
+```
+```{r}
+ggsave(sinusfactorsTableCRS, filename = "../figures/sinusFactorsTableCRS.pdf",
+       device = "pdf",
+       height = 3,
+       width = 8)
+```
+
+### Non-CRS dataset
+```{r}
+sinusFactorsNonCRS <- clinicalData %>%
+  select(SAMPLE_NAME, DIAG_CRS, contains("SINUS_FACTORS")) %>%
+  select(-contains(c("FESS", "OTHER"))) %>%
+  filter(!is.na(SINUS_FACTORS_COMPLETE)) %>%
+  select(-SINUS_FACTORS_COMPLETE, -SINUS_FACTORS_POLYPOIDCHANGE) %>%
+  dplyr::rename(Smoker = SINUS_FACTORS_SMOKER,
+                Polyps = SINUS_FACTORS_POLYPS, 
+                GERD = SINUS_FACTORS_GERD,
+                Asthma = SINUS_FACTORS_ASTHMA,
+                Allergies = SINUS_FACTORS_ALLERGIES) %>%
+  pivot_longer(cols = c("Smoker","Polyps", "GERD", "Asthma", "Allergies"), names_to = "FACTOR", values_to = "boo") %>%
+  mutate(BOOL = ifelse(boo == 1, TRUE, FALSE)) %>%
+  filter(DIAG_CRS == "Healthy")
+sinusFactorsNonCRS
+```
+
+```{r fig.height=2}
+#1.1
+sinusfactorsTableNonCRS <- ggplot(sinusFactorsNonCRS, aes(x=SAMPLE_NAME, y=FACTOR)) + 
+  geom_tile(colour = "whitesmoke",size=.5, aes(fill = BOOL)) +
+  #geom_point(aes(color = BOOL)) + # Make the squares dots instead
+  scale_x_discrete(breaks = NonCRSsampleOrder, 
+                   limits = NonCRSsampleOrder,
+                   expand = c(0,0)) + #Make the boxes square
+  scale_y_discrete(expand = c(0,0)) + #Make the boxes square
+  coord_fixed(ratio=1) +  #Make the boxes square
+  scale_fill_manual(values = c("white", "black")) +
+  #scale_fill_manual(values = c("white", "white")) + # Make the squares dots instead
+  #scale_color_manual(values = c("white", "black")) + # Make the squares dots instead
+  #theme_minimal(base_size = 10) + 
+  theme(legend.position = "",
+        axis.text.x = element_blank(),
+        #axis.text.x = element_text(angle=90),
+        axis.ticks = element_blank(),
+        axis.title = element_blank())
+sinusfactorsTableNonCRS
+```
+
+##SNOT20 Vars
+### CRS dataset
+```{r}
+# Define variables to keep
+snot20PlotKeep <- c("blow nose", "runny nose", "thick nasal discharge", "post-nasal discharge", "ear pain", "ear fullness", "facial pain & pressure")
+# Make table
+snot20QsCRS <- clinicalData %>%
+  data.frame() %>%
+  select(SAMPLE_NAME, subject_id, DIAG_CRS, blow_nose:embarrassed) %>%
+  dplyr::rename("blow nose" = blow_nose,
+                "difficulty falling asleep" = difficulty_falling_asleep,
+                "ear fullness" = ear_fullness,
+                "ear pain" = ear_pain,
+                "facial pain & pressure" = facial_pain_pressure,
+                "frustrated/restless/irritable" = frustrated_restless_irritable,
+                "lack sleep" = lack_sleep,
+                "post-nasal discharge" = post_nasal_discharge,
+                "reduced concentration" = reduced_concentration,
+                "runny nose" = runny_nose,
+                "thick nasal discharge" = thick_nasal_discharge,
+                "wake tired" = wake_tired,
+                "wake up at night" = wake_up_at_night
+                ) %>%
+  pivot_longer(cols = "blow nose":"embarrassed", names_to = "FACTOR", values_to = "VALUE") %>%
+  replace_with_na(replace = list(VALUE = 0)) %>%
+  #filter(FACTOR %in% snot20PlotKeep) %>%
+  filter(DIAG_CRS == "CRS")
+```
+```{r}
+snot20TableCRS <- ggplot(snot20QsCRS, aes(x=SAMPLE_NAME, y=FACTOR)) + 
+  geom_tile(colour = "whitesmoke", size=.5, aes(fill=DIAG_CRS)) +
+  geom_point(aes(size = VALUE, color = VALUE)) + # Make the squares dots instead
+  scale_x_discrete(breaks = CRSsampleOrder, 
+                   limits = CRSsampleOrder,
+                   expand = c(0,0)) + #Make the boxes square
+  scale_y_discrete(expand = c(0,0)) + #Make the boxes square
+  coord_fixed(ratio=1) +  #Make the boxes square
+  scale_size(range = c(.5,2), breaks = c(1,2,3,4,5)) +
+  #scale_colour_brewer(palette = "Greens") +
+  scale_fill_manual(values = c("white", "white")) +
+  scale_color_gradient(low = "grey", 
+                       high = "red") + 
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "",
+        axis.text.x = element_text(angle=90),
+        #axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank())
+snot20TableCRS
+```
+```{r}
+ggsave(snot20TableCRS, filename = "../figures/snot20TableCRS.",
+       device = "pdf",
+       height = 3,
+       width = 8)
+```
+
+### Non-CRS dataset
+```{r}
+snot20QsNonCRS <- clinicalData %>%
+  data.frame() %>%
+  select(SAMPLE_NAME, subject_id, DIAG_CRS, blow_nose:embarrassed) %>%
+  dplyr::rename("blow nose" = blow_nose,
+                "difficulty falling asleep" = difficulty_falling_asleep,
+                "ear fullness" = ear_fullness,
+                "ear pain" = ear_pain,
+                "facial pain & pressure" = facial_pain_pressure,
+                "frustrated/restless/irritable" = frustrated_restless_irritable,
+                "lack sleep" = lack_sleep,
+                "post-nasal discharge" = post_nasal_discharge,
+                "reduced concentration" = reduced_concentration,
+                "runny nose" = runny_nose,
+                "thick nasal discharge" = thick_nasal_discharge,
+                "wake tired" = wake_tired,
+                "wake up at night" = wake_up_at_night
+                ) %>%
+  pivot_longer(cols = "blow nose":"embarrassed", names_to = "FACTOR", values_to = "VALUE") %>%
+  replace_with_na(replace = list(VALUE = 0)) %>%
+#  filter(FACTOR %in% snot20PlotKeep) %>%
+  filter(DIAG_CRS == "Healthy")
+```
+
+```{r}
+snot20TableNonCRS <- ggplot(snot20QsNonCRS, aes(x=SAMPLE_NAME, y=FACTOR)) + 
+  geom_tile(colour = "whitesmoke", size=.5, aes(fill=DIAG_CRS)) +
+  geom_point(aes(size = VALUE, color = VALUE)) + # Make the squares dots instead
+  scale_x_discrete(breaks = NonCRSsampleOrder, 
+                   limits = NonCRSsampleOrder,
+                   expand = c(0,0)) + #Make the boxes square
+  scale_y_discrete(expand = c(0,0)) + #Make the boxes square
+  coord_fixed(ratio=1) +  #Make the boxes square
+  #facet_grid(cols = vars(DIAG_CRS), scales = "free_x", space = "free") +
+  scale_size(range = c(.5,2), breaks = c(1,2,3,4,5)) +
+  scale_fill_manual(values = c("white", "white")) +
+  scale_color_gradient(low = "grey",  
+                       high = "red") + 
+  theme(legend.position = "",
+        #axis.text.x = element_blank(),
+        axis.text.x = element_text(angle=90),
+        axis.ticks = element_blank(),
+        axis.title = element_blank())
+snot20TableNonCRS
+```
+```{r}
+ggsave(snot20TableNonCRS, filename = "../figures/snot20TableNonCRS.",
+       device = "pdf",
+       height = 3,
+       width = 8)
+```
+
+
+Output a table of summary data for the following variables: Group by CRS status
+Sex, Age, Polyps, Medications: Antibiotics/Steroids (#) Culture (#) Previous FESS (#), SNOT-22 measurements, 

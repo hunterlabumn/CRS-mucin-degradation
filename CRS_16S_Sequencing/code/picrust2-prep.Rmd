@@ -1,0 +1,93 @@
+---
+title: "Picrust2-Prep"
+---
+# Setup
+```{r}
+library(dada2);packageVersion("dada2")
+library(phyloseq);packageVersion("phyloseq")
+library(tidyverse);packageVersion("tidyverse")
+library(biomformat);packageVersion("biomformat")
+library(phylotools);packageVersion("phylotools")
+library(exploratory);packageVersion("exploratory")
+```
+# Import filtered sequence table from preprocessing.Rmd
+```{r}
+data <- readRDS("../data/PHYLOSEQ_DATA/phyloseq_filtered_rare_MAR2020.rds")
+data
+```
+
+# Make metadata.tsv file
+```{r}
+metadata <- data.frame(sample_data(data)) %>%
+  select(SAMPLE_NAME, SEQ_RUN_NAME_SHORT, DIAG_CRS, DEM_AGE, DEM_SEX, SNOT20_TOTAL, LABS_S_AUREUS, LABS_S_AUREUS_GROWTH)
+write_tsv(metadata, "../data/picrust2/metadata.tsv")
+```
+
+# Make table.biom
+table.biom is a counts data table that has the unique ASV identifiers as the first column, followed by the sample columns and count data
+```{r}
+# Extract abundance matrix from the phyloseq object
+ASV = as(otu_table(data), "matrix")
+# transpose if necessary
+if(!taxa_are_rows(data)){ASV <- t(ASV)}
+# Coerce to data.frame
+ASVdf = as.data.frame(ASV)
+```
+Give short unique names to table
+```{r}
+ASVdfShortNames <- ASVdf %>%
+  rownames_to_column("ASV") %>%
+  mutate(COUNT = str_c("ASV", 1:n(), sep = ""),
+         SHORTASV = substr(ASV, 1, 5)) %>%
+  unite(SHORTNAME, c(COUNT, SHORTASV))
+  
+length(unique(ASVdfShortNames$SHORTNAME))
+```
+Cool, so there are 121 rows in our otu table, and 121 unique names in shortnames, so we are good to go.  
+Make it a matrix with shortnames as rownames
+```{r}
+ASVmatShortNames <- ASVdfShortNames %>%
+  select(SHORTNAME, everything(), -ASV) %>%
+  column_to_rownames("SHORTNAME") %>%
+  as.matrix()
+```
+save as a biom file
+```{r}
+asv_biom <- make_biom(data=ASVmatShortNames)
+write_biom(asv_biom,"../data/picrust2/table.biom")
+```
+
+# Make ASV fasta file
+get data.frame with first column as SHORTNAME, and second column as ASV sequence. The names of the headers must be seq.name and seq.text. The resulting file will be called seqs.fna
+```{r}
+fastaNames <- select(ASVdfShortNames, seq.name = SHORTNAME, seq.text = ASV)
+dat2fasta(fastaNames, outfile = "../data/picrust2/seqs.fna")
+```
+
+# Run PICRUSt2 in Terminal 
+## (from https://github.com/picrust/picrust2/wiki/PICRUSt2-Tutorial-(v2.3.0-beta))
+
+### Make output folder in data/picrust and enter it
+mkdir picrust2_out_pipeline
+cd picrust2_out_pipeline
+
+### Align ASVs
+place_seqs.py -s ../seqs.fna -o out.tre -p 1 \
+              --intermediate intermediate/place_seqs
+              
+hsp.py -i 16S -t out.tre -o marker_predicted_and_nsti.tsv.gz -p 1 -n
+
+hsp.py -i EC -t out.tre -o EC_predicted.tsv.gz -p 1
+
+metagenome_pipeline.py -i ../table.biom -m marker_predicted_and_nsti.tsv.gz -f EC_predicted.tsv.gz \
+                       -o EC_metagenome_out --strat_out
+
+add_descriptions.py -i EC_metagenome_out/pred_metagenome_unstrat.tsv.gz -m EC \
+                    -o EC_metagenome_out/pred_metagenome_unstrat_descrip.tsv.gz
+
+pathway_pipeline.py -i EC_metagenome_out/pred_metagenome_contrib.tsv.gz \
+                    -o pathways_out -p 1
+
+add_descriptions.py -i pathways_out/path_abun_unstrat.tsv.gz -m METACYC \
+                    -o pathways_out/path_abun_unstrat_descrip.tsv.gz
+

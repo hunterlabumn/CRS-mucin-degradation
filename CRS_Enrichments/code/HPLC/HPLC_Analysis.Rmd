@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+```
+Aesthetics
+```{r}
+cbPal <- c("pink","#E69F00","#56B4E9","#009E73","#F0E442", "#0072B2","#75437C","#B52F25") 
+theme_transparent <- theme(panel.background = element_rect(fill = "transparent"),
+                           plot.background = element_rect(fill = "transparent", 
+                                                        color = NA),
+                           panel.grid.major = element_line(color = "transparent"),
+                           panel.grid.minor = element_line(color = "transparent"),
+                           legend.background = element_rect(fill = "transparent"), 
+                           legend.box.background = element_rect(fill = "transparent", 
+                                                                color = "transparent")
+)
+
+```
+
+```{r}
+data <- read_csv(file = "../HPLC/Supernatant_OA_HPLC_Measurements.csv") %>%
+  filter(Date %in% c("APR2020")) # Dropping 164 from publication data for now because it has no matching daata
+fa <- c("Acetate","Propionate","Lactate") # leaving out Butryate here because all negative numbers (?)
+sp <- c("Succinate","Pyruvate")
+data_fa <- data %>%
+  filter(OrganicAcid %in% fa) %>%
+  mutate(Concentration_mM_adjusted = ifelse(Concentration_mM > 0, Concentration_mM, 0))
+data_sp <- data %>%
+  filter(OrganicAcid %in% sp) %>%
+  mutate(Concentration_uM = Concentration_mM*1000) # Conversion from mM to uM for Pyruvate/Succinate
+```
+Boxplots
+```{r}
+# New levels for facet order
+data_fa$OrganicAcid_newlevel = factor(data_fa$OrganicAcid, levels=c('Acetate','Propionate','Lactate'))
+
+# Boxplot
+fa_boxplot <- ggbarplot(data_fa, x = "PubLetter", y = "Concentration_mM_adjusted",
+                        facet.by = c("OrganicAcid_newlevel", "Date"),
+                        scales = "free",
+                        fill = "PubLetter", 
+                        add = c("mean_sd","jitter"),
+                        palette = cbPal)
+fa_boxplot
+```
+Dropping the April 2019 data I think. It used a different sample prep than the other batchs. The cellulose columns may be absorbing acetate and propionate.
+```{r}
+# Boxplot
+sp_boxplot <- ggbarplot(data_sp, x = "PubLetter", y = "Concentration_uM",
+                        facet.by = c("OrganicAcid", "Date"),
+                        scales = "free",
+                        fill = "PubLetter", 
+                        add = "mean_sd",
+                        palette = cbPal)
+sp_boxplot
+```
+
+
+

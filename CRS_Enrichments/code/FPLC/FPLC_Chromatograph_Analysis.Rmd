@@ -1,0 +1,217 @@
+---
+title: "FPLC Unicorn File Analysis"
+Author: "Sarah Lucas"
+---
+# Steps to get input data file
+
+Step 1. Download PyCorn. Most computers already have python (at least 2.7, but probably 2.7/3.x) pre-installed so copy and past the following code into a Terminal:
+
+pip install pycorn
+
+Step 2. Export each Unicorn file as a .zip file and transfer them to your computer. Save all of them in a single folder. Enter that folder in your terminal. There are options for exporting files directly to .csv files, but I haven't been able to make it work yet. the pycorn-bin.py does havea csv flag instead of xlsx, but I haven't been able to make that work. So, Copy and past the following into your terminal with *zip ("all .zip files") as the 'input.res' option:
+
+##Extract data to xlsx-file:
+pycorn-bin.py -e xlsx input.res <-- DUMMY EXAMPLE
+pycorn-bin.py -e xlsx *zip <-- COPY AND PASTE
+
+Then, you can batch convert the xlsx files 
+
+##download the python package xlsx2csv
+pip install xlsx2csv
+
+## make a script named batch_xlsx2csv.sh containing the text below and save it somewhere in your PATH (don't forget to de-comment the lines).
+for i in *.xlsx;
+ do
+  filename=$(basename "$i" .xlsx);
+  outext=".csv"
+  xlsx2csv $i $filename$outext
+done
+
+## make the script executable
+chmod +x batch_xlsx2csv.sh to 
+
+## Go back to the folder with your new xlsx files and run the line
+batch_xlsx2csv.sh
+
+Now you should have a folder filled with the original .zip files, .xlsx files, and the new .csv files.
+
+Step 3. Load the libararies below.
+```{r}
+library(DescTools)
+library(tidyverse)
+```
+Aesthetics
+```{r}
+
+cbPal_MMM <- c("black","pink","#E69F00","#56B4E9","#009E73","#F0E442", "#0072B2","#75437C","#B52F25") 
+
+theme_transparent <- theme(panel.background = element_rect(fill = "transparent"),
+                           plot.background = element_rect(fill = "transparent", 
+                                                        color = NA),
+                           panel.grid.major = element_line(color = "transparent"),
+                           panel.grid.minor = element_line(color = "transparent"),
+                           legend.background = element_rect(fill = "transparent"), 
+                           legend.box.background = element_rect(fill = "transparent", 
+                                                                color = "transparent"))
+```
+
+Step 4a. Function for importing .csv files
+```{r}
+read_chr_data <- function (x) {
+  read_csv(x, col_types = 
+             cols(
+               UV = col_double(),
+               X18 = col_double()
+             )) %>%
+  data.frame() %>%
+  select(ElutionVolume = UV, Absorbance280 = X18) %>%
+ # filter(row_number() > 46, row_number() < 200)
+  #filter(row_number() != 1) %>%
+  slice(49:39797)
+#  x$Absorbance280 <- as.numeric()
+}
+```
+Step 4b. Import csv files. Customize to file location and data object naming.
+```{r}
+chr_data_MMM <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/MMM_blank.csv")
+chr_data_164 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super164_blank.csv")
+chr_data_222 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super222_blank.csv")
+chr_data_230 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super230_blank.csv")
+chr_data_234 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super234_blank.csv")
+chr_data_235 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super235_blank.csv")
+chr_data_243 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super243_blank.csv")
+chr_data_260 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super260_blank.csv")
+chr_data_262 <- read_chr_data("~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/Super262_blank.csv")
+```
+
+```{r}
+#chr_data_MMM$ElutionVolume <- as.double(chr_data_MMM$ElutionVolume)
+```
+
+
+Step 5. Customizable. Add/delete data objects from the plot. Change colors, aesthetics, etc.
+```{r}
+#fig.height=5, fig.width=8
+chromatogram <- ggplot(chr_data_MMM, aes(x=ElutionVolume, y = Absorbance280)) +
+  geom_line(size = 1) +
+  geom_step(data = chr_data_164, color = "pink") +
+  geom_step(data = chr_data_222, color = "#E69F00") +
+  geom_step(data = chr_data_230, color = "#56B4E9") +
+  geom_step(data = chr_data_234, color = "#009E73") +
+  geom_step(data = chr_data_235, color = "#F0E442") +
+  geom_step(data = chr_data_243, color = "#0072B2") +
+  geom_step(data = chr_data_260, color = "#75437C") +
+  geom_step(data = chr_data_262, color = "#B52F25") +
+#  geom_vline(xintercept = 6.8, alpha = 0.5, linetype = 2) +
+#  geom_vline(xintercept = 8.8, alpha = 0.5, linetype = 2) +
+  scale_x_continuous(name = "Elution Volume (mL)", 
+#                     breaks = c(0,5,10,15,20,25)
+                     ) +
+  ylab("Absorbance (280nm)") +
+  theme_pubr()
+chromatogram
+```
+
+```{r}
+chr_data_MMM_first_peak <- chr_data_MMM %>% filter(between(ElutionVolume, 7, 10))
+chr_data_164_first_peak <- chr_data_164 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_222_first_peak <- chr_data_222 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_230_first_peak <- chr_data_230 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_234_first_peak <- chr_data_234 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_235_first_peak <- chr_data_235 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_243_first_peak <- chr_data_243 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_260_first_peak <- chr_data_260 %>% filter(between(ElutionVolume, 7, 10))
+chr_data_262_first_peak <- chr_data_262 %>% filter(between(ElutionVolume, 7, 10))
+```
+
+
+
+```{r fig.height=3, fig.width=3}
+chromatogram_firstpeak <- ggplot(chr_data_MMM_first_peak, aes(x=as.numeric(ElutionVolume), y = as.numeric(Absorbance280))) +
+  geom_line() +
+  geom_step(data = chr_data_164_first_peak, color = "pink") +
+  geom_step(data = chr_data_222_first_peak, color = "#E69F00") +
+  geom_step(data = chr_data_230_first_peak, color = "#56B4E9") +
+  geom_step(data = chr_data_234_first_peak, color = "#009E73") +
+  geom_step(data = chr_data_235_first_peak, color = "#F0E442") +
+  geom_step(data = chr_data_243_first_peak, color = "#0072B2") +
+  geom_step(data = chr_data_260_first_peak, color = "#75437C") +
+  geom_step(data = chr_data_262_first_peak, color = "#B52F25") +
+  geom_vline(xintercept = 7.2, alpha = 0.5, linetype = 2) +
+  geom_vline(xintercept = 8.2, alpha = 0.5, linetype = 2) +
+  scale_x_continuous(name = "Elution Volume (mL)", 
+#                     breaks = c(0,5,10,15,20,25)
+                     ) +
+  ylab("Absorbance (280nm)") +
+  theme_pubr(base_size = 10)
+  theme(
+    axis.ticks = element_line(color = "black"),
+    panel.border = element_rect(fill = "transparent", color = "black")) +
+    theme_transparent
+
+chromatogram_firstpeak
+```
+```{r}
+#ggsave(plot = chromatogram_firstpeak, file = "~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/firstpeak.pdf", device = "pdf", width = 2.5, height = 2.5, useDingbats = FALSE, bg = "transparent")
+#ggsave(plot = chromatogram_firstpeak, file = "~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/firstpeak.png", device = "png", width = 2.5, height = 2.5, bg = "transparent")
+```
+
+Step 6. Calculate area under the curve (AUC)
+Using this method: https://rdrr.io/cran/DescTools/man/AUC.html
+Area under the curve calculation:
+Create a function to apply to each dataset
+```{r}
+find_AUC <- function(data, upper = 7.2, lower = 8.2){
+  data$ElutionVolume <- as.numeric(data$ElutionVolume)
+  data$Absorbance280 <- as.numeric(data$Absorbance280)
+  
+  data_peak1 <- data %>%
+  filter(ElutionVolume > upper) %>%
+  filter(ElutionVolume < lower)
+
+  
+  x = data_peak1$ElutionVolume
+  y = data_peak1$Absorbance280
+  
+  AUC(x = x, y = y, method = "spline", na.rm = FALSE)
+}
+```
+Apply function to datasets. 
+```{r}
+AUC_MMM <- find_AUC(data = chr_data_MMM)
+AUC_164 <- find_AUC(data = chr_data_164)
+AUC_222 <- find_AUC(data = chr_data_222)
+AUC_230 <- find_AUC(data = chr_data_230)
+AUC_234 <- find_AUC(data = chr_data_234)
+AUC_235 <- find_AUC(data = chr_data_235)
+AUC_243 <- find_AUC(data = chr_data_243)
+AUC_260 <- find_AUC(data = chr_data_260)
+AUC_262 <- find_AUC(data = chr_data_262)
+
+AUC <- data.frame(sample = c("MMM","164","222","230","234","235","243","260","262"), AUC = c(AUC_MMM, AUC_164, AUC_222, AUC_230, AUC_234, AUC_235, AUC_243, AUC_260, AUC_262))
+```
+
+Graph AUC as a bar graph
+```{r, fig.height = 3, fig.width = 3}
+cbPal_MMM <- c("black","pink","#E69F00","#56B4E9","#009E73","#F0E442", "#0072B2","#75437C","#B52F25") 
+
+AUC_bargraph <- ggplot(AUC, aes(x = reorder(sample, -AUC), y = as.double(AUC), fill = sample, color = "black")) + geom_bar(stat = "identity", alpha = 1) +
+  theme_pubr(base_size = 10) +
+  ylab("AUC") +
+  scale_x_discrete(breaks = c("MMM","164","222","230","234","235","243","260","262"),
+                   labels = c("MMM", "A","B","C","D","E","F","G","H")) +
+  scale_fill_manual(values = cbPal_MMM,
+                    limits = c("MMM","164","222","230","234","235","243","260","262")) +
+  scale_color_manual(values = "black") +
+  theme_pubr() +
+  theme( 
+    legend.position = "",
+    legend.title = element_blank(),
+    axis.title.x = element_blank()
+  ) + theme_transparent
+AUC_bargraph
+```
+```{r}
+#ggsave(plot = AUC_bargraph, file = "~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/firstpeakAUC.pdf", device = "pdf", width = 3, height = 3, bg = "transparent")
+#ggsave(plot = AUC_bargraph, file = "~/Documents/MICaB/Hunter_Lab/Projects/inProgress/CRS_MMM_Enrichments/FPLC/FPLC_MMM_SUPERS/September2019Supernatants/firstpeakAUC.jpg", device = "jpg", width = 3, height = 3, bg = "transparent")
+```
